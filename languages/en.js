@@ -1,5 +1,5 @@
 window.angularTranslations = {
-  YOUR_SNAKE_COLOR_IS: "Your snake color is {{color}}",
+  YOUR_SHIP_COLOR_IS: "Your ship color is {{color}}",
   COLOR_SCORE_IS: "{{color}}: {{score}}",
   WHITE: "White",
   BLACK: "Black",

@@ -7,14 +7,12 @@ module.exports = function(grunt) {
     pkg: grunt.file.readJSON('package.json'),
     jshint: {
       options: {
-        curly: true,
         eqeqeq: true,
         eqnull: true,
         browser: true,
         strict: true,
         undef: true,
         unused: true,
-        bitwise: true,
         forin: true,
         freeze: true,
         latedef: true,
@@ -31,7 +29,7 @@ module.exports = function(grunt) {
           console: false,
         },
       },
-      all: ['src/game.js', 'realTimeService.js']
+      all: ['src/game.js']
     },
     concat: {
       options: {
@@ -39,8 +37,8 @@ module.exports = function(grunt) {
       },
       dist: {
         // Order is important! gameLogic.js must be first because it defines myApp angular module.
-        src: ['src/lib.js', 'src/game.js'],
-        dest: 'dist/game.js',
+        src: ['src/vector_battle.typeface.js', 'src/game.js'],
+        dest: 'dist/everything.js',
       },
     },
     uglify: {
@@ -49,14 +47,14 @@ module.exports = function(grunt) {
       },
       my_target: {
         files: {
-          'dist/game.min.js': ['src/game.js']
+          'dist/everything.min.js': ['dist/everything.js']
         }
       }
     },
     processhtml: {
       dist: {
         files: {
-          'index.min.html': ['index.html']
+          'game.min.html': ['game.html']
         }
       }
     },
@@ -65,22 +63,24 @@ module.exports = function(grunt) {
         options: {
           basePath: '.',
           cache: [
+            'https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js',
             'http://ajax.googleapis.com/ajax/libs/angularjs/1.3.8/angular.min.js',
             'http://cdnjs.cloudflare.com/ajax/libs/seedrandom/2.3.11/seedrandom.min.js',
-            'http://yoav-zibin.github.io/emulator/dist/realTimeServices.min.js',
+            'http://yoav-zibin.github.io/emulator/dist/realTimeSimpleServices.min.js',
             'http://yoav-zibin.github.io/emulator/angular-translate/angular-translate.2.6.1.min.js',
             'languages/en.js',
             'http://yoav-zibin.github.io/emulator/main.css',
-            'dist/game.min.js'
+            'styles/game.css',
+            'dist/everything.min.js'
           ],
           network: [
             'languages/en.js',
-            'dist/game.min.js.map',
-            'dist/game.js'
+            'dist/everything.min.js.map',
+            'dist/everything.js'
           ],
           timestamp: true
         },
-        dest: 'index.appcache',
+        dest: 'game.appcache',
         src: []
       }
     },
@@ -104,6 +104,6 @@ module.exports = function(grunt) {
   require('load-grunt-tasks')(grunt);
 
   // Default task(s).
-  grunt.registerTask('default', ['uglify', 'processhtml', 'manifest']);
+  grunt.registerTask('default', ['concat', 'uglify', 'processhtml', 'manifest']);
 
 };
