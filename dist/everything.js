@@ -28,6 +28,8 @@ var colorMap = {
     'silver': '#bdc3c7'
 };
 
+var randomIndex = 37;
+
 KEY_STATUS = { keyDown:false };
 for (var code in KEY_CODES) {
     KEY_STATUS[KEY_CODES[code]] = false;
@@ -415,7 +417,7 @@ Ship = function () {
             var rad = ((this.rot-90) * Math.PI)/180;
             this.acc.x = 0.5 * Math.cos(rad);
             this.acc.y = 0.5 * Math.sin(rad);
-            this.children.exhaust.visible = Math.random() > 0.1;
+            this.children.exhaust.visible = randomService.random(randomIndex) > 0.1;
         } else {
             this.acc.x = 0;
             this.acc.y = 0;
@@ -430,7 +432,6 @@ Ship = function () {
                 this.bulletCounter = 10;
                 for (var i = 0; i < this.bullets.length; i++) {
                     if (!this.bullets[i].visible) {
-                        SFX.laser();
                         var bullet = this.bullets[i];
                         var rad = ((this.rot-90) * Math.PI)/180;
                         var vectorx = Math.cos(rad);
@@ -455,7 +456,6 @@ Ship = function () {
     };
 
     this.collision = function (other) {
-        SFX.explosion();
         Game.explosionAt(other.x, other.y);
         Game.FSM.state = 'player_died';
         this.visible = false;
@@ -502,14 +502,14 @@ BigAlien = function () {
     this.bulletCounter = 0;
 
     this.newPosition = function () {
-        if (Math.random() < 0.5) {
+        if (randomService.random(randomIndex++) < 0.5) {
             this.x = -20;
             this.vel.x = 1.5;
         } else {
             this.x = Game.canvasWidth + 20;
             this.vel.x = -1.5;
         }
-        this.y = Math.random() * Game.canvasHeight;
+        this.y = randomService.random(randomIndex++) * Game.canvasHeight;
     };
 
     this.setup = function () {
@@ -540,7 +540,7 @@ BigAlien = function () {
             this.vel.y = 1;
         } else if (topCount < bottomCount) {
             this.vel.y = -1;
-        } else if (Math.random() < 0.01) {
+        } else if (randomService.random(randomIndex++) < 0.01) {
             this.vel.y = -this.vel.y;
         }
 
@@ -550,7 +550,7 @@ BigAlien = function () {
             for (var i = 0; i < this.bullets.length; i++) {
                 if (!this.bullets[i].visible) {
                     bullet = this.bullets[i];
-                    var rad = 2 * Math.PI * Math.random();
+                    var rad = 2 * Math.PI * randomService.random(randomIndex++);
                     var vectorx = Math.cos(rad);
                     var vectory = Math.sin(rad);
                     bullet.x = this.x;
@@ -558,7 +558,6 @@ BigAlien = function () {
                     bullet.vel.x = 6 * vectorx;
                     bullet.vel.y = 6 * vectory;
                     bullet.visible = true;
-                    SFX.laser();
                     break;
                 }
             }
@@ -568,7 +567,6 @@ BigAlien = function () {
 
     BigAlien.prototype.collision = function (other) {
         if (other.name == "bullet") Game.score += 200;
-        SFX.explosion();
         Game.explosionAt(other.x, other.y);
         this.visible = false;
         this.newPosition();
@@ -678,19 +676,18 @@ Asteroid = function () {
     this.collidesWith = ["ship", "bullet", "bigalien", "alienbullet"];
 
     this.collision = function (other) {
-        SFX.explosion();
         if (other.name == "bullet") Game.score += 120 / this.scale;
         this.scale /= 3;
         if (this.scale > 0.5) {
             // break into fragments
             for (var i = 0; i < 3; i++) {
                 var roid = $.extend(true, {}, this);
-                roid.vel.x = Math.random() * 6 - 3;
-                roid.vel.y = Math.random() * 6 - 3;
-                if (Math.random() > 0.5) {
+                roid.vel.x = randomService.random(randomIndex++) * 6 - 3;
+                roid.vel.y = randomService.random(randomIndex++) * 6 - 3;
+                if (randomService.random(randomIndex++) > 0.5) {
                     roid.points.reverse();
                 }
-                roid.vel.rot = Math.random() * 2 - 1;
+                roid.vel.rot = randomService.random(randomIndex++) * 2 - 1;
                 roid.move(roid.scale * 3); // give them a little push
                 Game.sprites.push(roid);
             }
@@ -709,7 +706,7 @@ Explosion = function () {
 
     this.lines = [];
     for (var i = 0; i < 5; i++) {
-        var rad = 2 * Math.PI * Math.random();
+        var rad = 2 * Math.PI * randomService.random(randomIndex++);
         var x = Math.cos(rad);
         var y = Math.sin(rad);
         this.lines.push([x, y, x*2, y*2]);
@@ -725,7 +722,7 @@ Explosion = function () {
                 this.context.moveTo(line[0], line[1]);
                 this.context.lineTo(line[2], line[3]);
                 this.context.strokeStyle = "#FF7A38";
-                if(Math.random() < 0.5) {
+                if(randomService.random(randomIndex++) < 0.5) {
                     this.context.strokeStyle = "#FFD738";    
                 }
                 this.context.stroke();
@@ -866,43 +863,13 @@ Text = {
     face: null
 };
 
-SFX = {
-    laser:     new Audio('audio/39459__THE_bizniss__laser.wav'),
-    explosion: new Audio('audio/51467__smcameron__missile_explosion.wav')
-};
-
-// preload audio
-for (var sfx in SFX) {
-    (function () {
-        var audio = SFX[sfx];
-        audio.muted = true;
-        audio.play();
-
-        SFX[sfx] = function () {
-            if (!this.muted) {
-                if (audio.duration == 0) {
-                    // somehow dropped out
-                    audio.load();
-                    audio.play();
-                } else {
-                    audio.muted = false;
-                    audio.currentTime = 0;
-                }
-            }
-            return audio;
-        }
-    })();
-}
-// pre-mute audio
-SFX.muted = true;
-
 function getRandomInt(min, max) {
     Math.seedrandom();
-    return Math.floor(Math.random() * (max - min + 1)) + min;
+    return Math.floor(randomService.random(randomIndex++) * (max - min + 1)) + min;
 }
 
 function getRandomGrayColor() {
-    var value = 0x88 + Math.random() * (0xEE - 0x88) | 0;
+    var value = 0x88 + randomService.random(randomIndex++) * (0xEE - 0x88) | 0;
     var grayscale = (value << 16) | (value << 8) | value;
     return '#' + grayscale.toString(16);
 }
@@ -926,28 +893,28 @@ Game = {
         if (!count) count = this.totalAsteroids;
         for (var i = 0; i < count; i++) {
             var roid = new Asteroid();
-            roid.x = Math.random() * this.canvasWidth;
-            roid.y = Math.random() * this.canvasHeight;
+            roid.x = randomService.random(randomIndex++) * this.canvasWidth;
+            roid.y = randomService.random(randomIndex++) * this.canvasHeight;
             while (!roid.isClear()) {
-                roid.x = Math.random() * this.canvasWidth;
-                roid.y = Math.random() * this.canvasHeight;
+                roid.x = randomService.random(randomIndex++) * this.canvasWidth;
+                roid.y = randomService.random(randomIndex++) * this.canvasHeight;
             }
-            roid.vel.x = Math.random() * 4 - 2;
-            roid.vel.y = Math.random() * 4 - 2;
-/*            if (Math.random() > 0.5) {
+            roid.vel.x = randomService.random(randomIndex++) * 4 - 2;
+            roid.vel.y = randomService.random(randomIndex++) * 4 - 2;
+/*            if (randomService.random(randomIndex++) > 0.5) {
                 roid.points.reverse();
             }*/
             var x0 = 0, y0 = 0.0, r = getRandomInt(15, 20), points = [];
             for (var j = 0; j < 2 * Math.PI;) {
                 var x = x0 + (r * Math.cos(j));
                 var y = y0 + (r * Math.sin(j));
-                j += ( 20 + (60 * Math.random())) * Math.PI / 180.0;
+                j += ( 20 + (60 * randomService.random(randomIndex++))) * Math.PI / 180.0;
                 points.push(x, y);
             }
             roid.points = points;
             var color = getRandomGrayColor();
             roid.fillColor = roid.strokeColor = color;
-            roid.vel.rot = Math.random() * 2 - 1;
+            roid.vel.rot = randomService.random(randomIndex++) * 2 - 1;
             Game.sprites.push(roid);
         }
     },
@@ -1009,7 +976,7 @@ Game = {
             Game.totalAsteroids = 2;
             Game.spawnAsteroids();
 
-            Game.nextBigAlienTime = Date.now() + 30000 + (30000 * Math.random());
+            Game.nextBigAlienTime = Date.now() + 30000 + (30000 * randomService.random(randomIndex++));
 
             this.state = 'spawn_ship';
         },
@@ -1036,7 +1003,7 @@ Game = {
             if (!Game.bigAlien.visible &&
                     Date.now() > Game.nextBigAlienTime) {
                 Game.bigAlien.visible = true;
-                Game.nextBigAlienTime = Date.now() + (30000 * Math.random());
+                Game.nextBigAlienTime = Date.now() + (30000 * randomService.random(randomIndex++));
             }
         },
         new_level: function () {
@@ -1281,7 +1248,6 @@ $(function () {
                 }
                 break;
             case 'm': // mute
-                SFX.muted = !SFX.muted;
                 break;
         }
     });
@@ -1310,8 +1276,10 @@ function gotEndMatch(endMatchScores) {
     Game.FSM.state = 'end_Game';
 }
 
-function setRealTimeSimpleService(realTimeSimpleService) {
+function setRealTimeSimpleService(realTimeSimpleService, randomService) {
     window.realTimeSimpleService = realTimeSimpleService;
+    window.randomService = randomService;
+
     realTimeSimpleService.init({
         gotStartMatch: gotStartMatch,
         gotMessage: gotMessage,
@@ -1320,7 +1288,8 @@ function setRealTimeSimpleService(realTimeSimpleService) {
 }
 
 angular.module('myApp', [])
-    .run(function (realTimeSimpleService, resizeGameAreaService) {
+    .run(function (realTimeSimpleService, resizeGameAreaService, randomService) {
     resizeGameAreaService.setWidthToHeight(1.77);
-    window.setRealTimeSimpleService(realTimeSimpleService);
+    
+    window.setRealTimeSimpleService(realTimeSimpleService, randomService);
 });

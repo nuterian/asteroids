@@ -66,15 +66,14 @@ module.exports = function(grunt) {
             'https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js',
             'http://ajax.googleapis.com/ajax/libs/angularjs/1.3.8/angular.min.js',
             'http://cdnjs.cloudflare.com/ajax/libs/seedrandom/2.3.11/seedrandom.min.js',
-            'http://yoav-zibin.github.io/emulator/dist/realTimeSimpleServices.min.js',
-            'http://yoav-zibin.github.io/emulator/angular-translate/angular-translate.2.6.1.min.js',
-            'languages/en.js',
+            'http://yoav-zibin.github.io/emulator/dist/realTimeSimpleServices.2.min.js',
             'http://yoav-zibin.github.io/emulator/main.css',
             'styles/game.css',
             'dist/everything.min.js'
           ],
           network: [
             'languages/en.js',
+            'languages/he.js',
             'dist/everything.min.js.map',
             'dist/everything.js'
           ],
