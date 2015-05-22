@@ -63,7 +63,6 @@ module.exports = function(grunt) {
         options: {
           basePath: '.',
           cache: [
-            'https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js',
             'http://ajax.googleapis.com/ajax/libs/angularjs/1.3.8/angular.min.js',
             'http://cdnjs.cloudflare.com/ajax/libs/seedrandom/2.3.11/seedrandom.min.js',
             'http://yoav-zibin.github.io/emulator/dist/realTimeSimpleServices.2.min.js',

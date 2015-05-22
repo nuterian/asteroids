@@ -1,3 +1,114 @@
+var class2type = {};
+"Boolean Number String Function Array Date RegExp Object Error".split(" ").forEach(function(name) {
+    class2type[ "[object " + name + "]" ] = name.toLowerCase();
+});
+
+function type( obj ) {
+    if ( obj == null ) {
+        return obj + "";
+    }
+    return typeof obj === "object" || typeof obj === "function" ?
+        class2type[ toString.call(obj) ] || "object" :
+        typeof obj;
+}
+
+function isFunction(obj) {
+    return type(obj) === "function";
+}
+
+function isWindow( obj ) {
+    /* jshint eqeqeq: false */
+    return obj != null && obj == obj.window;
+}
+
+var isArray = Array.isArray || function( obj ) {
+    return jQuery.type(obj) === "array";
+};
+
+function isPlainObject( obj ) {
+    // Not plain objects:
+    // - Any object or value whose internal [[Class]] property is not "[object Object]"
+    // - DOM nodes
+    // - window
+    if ( type( obj ) !== "object" || obj.nodeType || isWindow( obj ) ) {
+        return false;
+    }
+
+    if ( obj.constructor &&
+            !({}).hasOwnProperty.call( obj.constructor.prototype, "isPrototypeOf" ) ) {
+        return false;
+    }
+
+    // If the function hasn't returned already, we're confident that
+    // |obj| is a plain object, created by {} or constructed with new Object
+    return true;
+}
+
+function extend() {
+    var options, name, src, copy, copyIsArray, clone,
+        target = arguments[0] || {},
+        i = 1,
+        length = arguments.length,
+        deep = false;
+
+    // Handle a deep copy situation
+    if ( typeof target === "boolean" ) {
+        deep = target;
+
+        // Skip the boolean and the target
+        target = arguments[ i ] || {};
+        i++;
+    }
+
+    // Handle case when target is a string or something (possible in deep copy)
+    if ( typeof target !== "object" && !isFunction(target) ) {
+        target = {};
+    }
+
+    // Extend jQuery itself if only one argument is passed
+    if ( i === length ) {
+        target = this;
+        i--;
+    }
+
+    for ( ; i < length; i++ ) {
+        // Only deal with non-null/undefined values
+        if ( (options = arguments[ i ]) != null ) {
+            // Extend the base object
+            for ( name in options ) {
+                src = target[ name ];
+                copy = options[ name ];
+
+                // Prevent never-ending loop
+                if ( target === copy ) {
+                    continue;
+                }
+
+                // Recurse if we're merging plain objects or arrays
+                if ( deep && copy && ( isPlainObject(copy) || (copyIsArray = isArray(copy)) ) ) {
+                    if ( copyIsArray ) {
+                        copyIsArray = false;
+                        clone = src && isArray(src) ? src : [];
+
+                    } else {
+                        clone = src && isPlainObject(src) ? src : {};
+                    }
+
+                    // Never move original objects, clone them
+                    target[ name ] = extend( deep, clone, copy );
+
+                // Don't bring in undefined values
+                } else if ( copy !== undefined ) {
+                    target[ name ] = copy;
+                }
+            }
+        }
+    }
+
+    // Return the modified object
+    return target;
+}
+
 var KEY_CODES = {
     32: 'space',
     37: 'left',
@@ -34,13 +145,14 @@ for (var code in KEY_CODES) {
     KEY_STATUS[KEY_CODES[code]] = false;
 }
 
-$(window).keydown(function (e) {
+window.addEventListener('keydown', function (e) {
     KEY_STATUS.keyDown = true;
     if (KEY_CODES[e.keyCode]) {
         e.preventDefault();
         KEY_STATUS[KEY_CODES[e.keyCode]] = true;
     }
-}).keyup(function (e) {
+});
+window.addEventListener('keyup', function (e) {
     KEY_STATUS.keyDown = false;
     if (KEY_CODES[e.keyCode]) {
         e.preventDefault();
@@ -187,7 +299,7 @@ Sprite = function () {
         if (!this.visible) return;
         this.transPoints = null; // clear cached points
 
-        if ($.isFunction(this.preMove)) {
+        if (isFunction(this.preMove)) {
             this.preMove(delta);
         }
 
@@ -202,7 +314,7 @@ Sprite = function () {
             this.rot += 360;
         }
 
-        if ($.isFunction(this.postMove)) {
+        if (isFunction(this.postMove)) {
             this.postMove(delta);
         }
     };
@@ -680,7 +792,7 @@ Asteroid = function () {
         if (this.scale > 0.5) {
             // break into fragments
             for (var i = 0; i < 3; i++) {
-                var roid = $.extend(true, {}, this);
+                var roid = extend(true, {}, this);
                 roid.vel.x = randomService.random(randomIndex++) * 6 - 3;
                 roid.vel.y = randomService.random(randomIndex++) * 6 - 3;
                 if (randomService.random(randomIndex++) > 0.5) {
@@ -1056,14 +1168,14 @@ Game = {
 };
 
 
-$(function () {
-    var gameArea = $("#gameArea");
-    var canvas = $("#gameCanvas");
+window.onload = function(){
+    var gameArea = document.getElementById("gameArea");
+    var canvas = document.getElementById("gameCanvas");
 
-    canvas[0].width = Game.canvasWidth  = gameArea.width();
-    canvas[0].height = Game.canvasHeight = gameArea.height();
+    canvas.width = Game.canvasWidth = gameArea.clientWidth;
+    canvas.height = Game.canvasHeight = gameArea.clientHeight;
 
-    var context = canvas[0].getContext("2d");
+    var context = canvas.getContext("2d");
 
     Text.context = context;
     Text.face = vector_battle;
@@ -1147,7 +1259,7 @@ $(function () {
     var elapsed;
     var delta;
 
-    var canvasNode = canvas[0];
+    var canvasNode = canvas;
 
     // shim layer with setTimeout fallback
     // from here:
@@ -1233,7 +1345,7 @@ $(function () {
 
     mainLoop();
 
-    $(window).keydown(function (e) {
+    window.addEventListener('keydown', function (e) {
         switch (KEY_CODES[e.keyCode]) {
             case 'f': // show framerate
                 showFramerate = !showFramerate;
@@ -1251,7 +1363,7 @@ $(function () {
         }
     });
 
-});
+};
 
 function gotStartMatch(params) {
     isOngoing = true;
