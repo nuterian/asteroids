@@ -7,3 +7,63 @@ canvas {
 	width: 100%;
 	height: 100%;
 }
+
+.ico-help {
+    background:url(../imgs/ico_help.png);
+    width: 24px;
+    height: 24px;
+    opacity: 0.6;
+    cursor: pointer;
+    z-index: 1000;
+}
+
+.ico-help:hover {
+    opacity: 1;
+}
+
+.modal-content {
+    border-radius: 3px;
+}
+
+.btn {
+    background: #f8f8f8;
+    border-radius: 2px;
+    border: 1px solid #ddd;
+}
+
+.carousel-inner{
+    left: 15%;
+    width: 70%;
+    box-sizing: border-box;
+}
+.carousel-control.right, .carousel-control.left{
+    background: transparent;
+}
+
+.glyphicon.glyphicon-chevron-right, .glyphicon.glyphicon-chevron-left{
+    color: #333;
+    box-shadow: none;
+}
+
+
+.carousel-indicators li {
+  background-color: #888;
+}
+.carousel-indicators .active {
+    background-color: #e74c3c;
+}
+
+.carousel-indicators {
+  bottom: -55px;
+}
+
+@media screen and (min-width: 768px){
+    .carousel-indicators {
+      bottom: -55px;
+    }
+}
+
+.modal-footer {
+    height: 40px;
+    border:none;
+}

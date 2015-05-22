@@ -985,189 +985,6 @@ function getRandomGrayColor() {
     return '#' + grayscale.toString(16);
 }
 
-Game = {
-    score: 0,
-    totalAsteroids: 5,
-    lives: 0,
-
-    canvasWidth: 800,
-    canvasHeight: 600,
-
-    sprites: [],
-    ship: null,
-    bigAlien: null,
-
-    nextBigAlienTime: null,
-
-
-    spawnAsteroids: function (count) {
-        if (!count) count = this.totalAsteroids;
-        for (var i = 0; i < count; i++) {
-            var roid = new Asteroid();
-            roid.x = randomService.random(randomIndex++) * this.canvasWidth;
-            roid.y = randomService.random(randomIndex++) * this.canvasHeight;
-            while (!roid.isClear()) {
-                roid.x = randomService.random(randomIndex++) * this.canvasWidth;
-                roid.y = randomService.random(randomIndex++) * this.canvasHeight;
-            }
-            roid.vel.x = randomService.random(randomIndex++) * 4 - 2;
-            roid.vel.y = randomService.random(randomIndex++) * 4 - 2;
-/*            if (randomService.random(randomIndex++) > 0.5) {
-                roid.points.reverse();
-            }*/
-            var minRad = Math.min(this.canvasWidth, this.canvasHeight) / 50;
-            var x0 = 0, y0 = 0.0, r = getRandomInt(minRad, minRad+5), points = [];
-            for (var j = 0; j < 2 * Math.PI;) {
-                var x = x0 + (r * Math.cos(j));
-                var y = y0 + (r * Math.sin(j));
-                j += ( 20 + (60 * randomService.random(randomIndex++))) * Math.PI / 180.0;
-                points.push(x, y);
-            }
-            roid.points = points;
-            var color = getRandomGrayColor();
-            roid.fillColor = roid.strokeColor = color;
-            roid.vel.rot = randomService.random(randomIndex++) * 2 - 1;
-            Game.sprites.push(roid);
-        }
-    },
-
-    explosionAt: function (x, y) {
-        var splosion = new Explosion();
-        splosion.x = x;
-        splosion.y = y;
-        splosion.visible = true;
-        Game.sprites.push(splosion);
-    },
-
-    FSM: {
-        boot: function () {
-            Game.spawnAsteroids(5);
-            this.state = 'waiting';
-        },
-        waiting: function () {
-            Text.renderText('Waiting for players', Game.canvasWidth / 30, Game.canvasWidth/2 - (Game.canvasWidth / 30 * 7), Game.canvasHeight/2);
-        },
-        
-        countdown: function(dt) {
-            this.dtInState += dt/33.33;
-            var fontSize = Game.canvasWidth / 30;
-
-            if(this.dtInState < 1) {
-                Text.renderText('Game is about to begin', fontSize, Game.canvasWidth/2 - fontSize * 7, Game.canvasHeight/2);  
-            }
-            else if(this.dtInState < 2) {
-                size = fontSize * 2 * (0.2 + this.dtInState - 1);
-                Text.renderText('1', size, Game.canvasWidth/2 - size/2, Game.canvasHeight/2);     
-            }
-            else if(this.dtInState < 3) {
-                size = fontSize * 2 * (0.2 + this.dtInState - 2);
-                Text.renderText('2', size, Game.canvasWidth/2 - size/2, Game.canvasHeight/2);     
-            }
-            else if(this.dtInState < 4) {
-                size = fontSize * 2 * (0.2 + this.dtInState - 3);
-                Text.renderText('3', size, Game.canvasWidth/2 - size/2, Game.canvasHeight/2);     
-            }
-            else {
-                this.dtInState = 0;
-                this.state = 'start';
-            }
-        },
-
-        start: function () {
-            for (var i = 0; i < Game.sprites.length; i++) {
-                if (Game.sprites[i].name == 'asteroid') {
-                    Game.sprites[i].die();
-                } else if (Game.sprites[i].name == 'bullet' ||
-                                     Game.sprites[i].name == 'bigalien') {
-                    Game.sprites[i].visible = false;
-                }
-            }
-
-            Game.score = 0;
-            Game.lives = 2;
-            Game.totalAsteroids = 2;
-            Game.spawnAsteroids();
-
-            Game.nextBigAlienTime = Date.now() + 30000 + (30000 * randomService.random(randomIndex++));
-
-            this.state = 'spawn_ship';
-        },
-        spawn_ship: function () {
-            Game.ship.x = Game.canvasWidth / 2;
-            Game.ship.y = Game.canvasHeight / 2;
-            if (Game.ship.isClear()) {
-                Game.ship.rot = 0;
-                Game.ship.vel.x = 0;
-                Game.ship.vel.y = 0;
-                Game.ship.visible = true;
-                this.state = 'run';
-            }
-        },
-        run: function () {
-            for (var i = 0; i < Game.sprites.length; i++) {
-                if (Game.sprites[i].name == 'asteroid') {
-                    break;
-                }
-            }
-            if (i == Game.sprites.length) {
-                this.state = 'new_level';
-            }
-            if (!Game.bigAlien.visible &&
-                    Date.now() > Game.nextBigAlienTime) {
-                Game.bigAlien.visible = true;
-                Game.nextBigAlienTime = Date.now() + (30000 * randomService.random(randomIndex++));
-            }
-        },
-        new_level: function () {
-            if (this.timer == null) {
-                this.timer = Date.now();
-            }
-            // wait a second before spawning more asteroids
-            if (Date.now() - this.timer > 1000) {
-                this.timer = null;
-                Game.totalAsteroids++;
-                if (Game.totalAsteroids > 12) Game.totalAsteroids = 12;
-                Game.spawnAsteroids();
-                this.state = 'run';
-            }
-        },
-        player_died: function () {
-            if (Game.lives < 0) {
-                this.state = 'end_game';
-            } else {
-                if (this.timer == null) {
-                    this.timer = Date.now();
-                }
-                // wait a second before spawning
-                if (Date.now() - this.timer > 1000) {
-                    this.timer = null;
-                    this.state = 'spawn_ship';
-                }
-            }
-        },
-        end_game: function () {
-            Text.renderText('GAME OVER', Game.canvasWidth/30, Game.canvasWidth/2 - (Game.canvasWidth/30 * 5), Game.canvasHeight/2 + 10);
-            if (this.timer == null) {
-                this.timer = Date.now();
-            }
-            // wait 5 seconds then go back to waiting state
-            if (Date.now() - this.timer > 5000) {
-                this.timer = null;
-                this.state = 'waiting';
-            }
-
-            window.gameStart = false;
-        },
-
-        execute: function (dt) {
-            this[this.state](dt);
-        },
-        state: 'boot',
-        dtInState: 0
-    }
-
-};
-
 function gotStartMatch(params) {
     isOngoing = true;
     var yourPlayerIndex = params.yourPlayerIndex;
@@ -1201,8 +1018,8 @@ function setRealTimeSimpleService(realTimeSimpleService, randomService) {
     });
 }
 
-angular.module('myApp', [])
-    .run(['realTimeSimpleService', 'resizeGameAreaService', 'randomService', function (realTimeSimpleService, resizeGameAreaService, randomService) {
+angular.module('myApp', ['ngTouch','ui.bootstrap'])
+    .run(['$translate', 'realTimeSimpleService', 'resizeGameAreaService', 'randomService', function ($translate, realTimeSimpleService, resizeGameAreaService, randomService) {
     resizeGameAreaService.setWidthToHeight(1.77);
 
     window.onload = function(){
@@ -1211,16 +1028,16 @@ angular.module('myApp', [])
 
         window.setRealTimeSimpleService(realTimeSimpleService, randomService);
 
-        canvas.width = Game.canvasWidth = gameArea.clientWidth;
-        canvas.height = Game.canvasHeight = gameArea.clientHeight;
+        canvas.width = gameArea.clientWidth;
+        canvas.height = gameArea.clientHeight;
 
         var context = canvas.getContext("2d");
 
         Text.context = context;
         Text.face = vector_battle;
 
-        var gridWidth = Math.round(Game.canvasWidth / GRID_SIZE);
-        var gridHeight = Math.round(Game.canvasHeight / GRID_SIZE);
+        var gridWidth = Math.round(canvas.width / GRID_SIZE);
+        var gridHeight = Math.round(canvas.height / GRID_SIZE);
         var grid = new Array(gridWidth);
         for (var i = 0; i < gridWidth; i++) {
             grid[i] = new Array(gridHeight);
@@ -1242,22 +1059,204 @@ angular.module('myApp', [])
 
         // set up borders
         for (var i = 0; i < gridWidth; i++) {
-            grid[i][0].dupe.vertical            =  Game.canvasHeight;
-            grid[i][gridHeight-1].dupe.vertical = -Game.canvasHeight;
+            grid[i][0].dupe.vertical            =  canvas.height;
+            grid[i][gridHeight-1].dupe.vertical = -canvas.height;
         }
 
         for (var j = 0; j < gridHeight; j++) {
-            grid[0][j].dupe.horizontal           =  Game.canvasWidth;
-            grid[gridWidth-1][j].dupe.horizontal = -Game.canvasWidth;
+            grid[0][j].dupe.horizontal           =  canvas.height;
+            grid[gridWidth-1][j].dupe.horizontal = -canvas.height;
         }
-
-        var sprites = [];
-        Game.sprites = sprites;
 
         // so all the sprites can use it
         Sprite.prototype.context = context;
         Sprite.prototype.grid    = grid;
         Sprite.prototype.matrix  = new Matrix(2, 3);
+
+        window.Game = {
+            score: 0,
+            totalAsteroids: 5,
+            lives: 0,
+
+            canvasWidth: canvas.width,
+            canvasHeight: canvas.height,
+
+            sprites: [],
+            ship: null,
+            bigAlien: null,
+
+            nextBigAlienTime: null,
+
+            spawnAsteroids: function (count) {
+                if (!count) count = this.totalAsteroids;
+                for (var i = 0; i < count; i++) {
+                    var roid = new Asteroid();
+                    roid.x = randomService.random(randomIndex++) * this.canvasWidth;
+                    roid.y = randomService.random(randomIndex++) * this.canvasHeight;
+                    while (!roid.isClear()) {
+                        roid.x = randomService.random(randomIndex++) * this.canvasWidth;
+                        roid.y = randomService.random(randomIndex++) * this.canvasHeight;
+                    }
+                    roid.vel.x = randomService.random(randomIndex++) * 4 - 2;
+                    roid.vel.y = randomService.random(randomIndex++) * 4 - 2;
+        /*            if (randomService.random(randomIndex++) > 0.5) {
+                        roid.points.reverse();
+                    }*/
+                    var minRad = Math.min(this.canvasWidth, this.canvasHeight) / 50;
+                    var x0 = 0, y0 = 0.0, r = getRandomInt(minRad, minRad+5), points = [];
+                    for (var j = 0; j < 2 * Math.PI;) {
+                        var x = x0 + (r * Math.cos(j));
+                        var y = y0 + (r * Math.sin(j));
+                        j += ( 20 + (60 * randomService.random(randomIndex++))) * Math.PI / 180.0;
+                        points.push(x, y);
+                    }
+                    roid.points = points;
+                    var color = getRandomGrayColor();
+                    roid.fillColor = roid.strokeColor = color;
+                    roid.vel.rot = randomService.random(randomIndex++) * 2 - 1;
+                    Game.sprites.push(roid);
+                }
+            },
+
+            explosionAt: function (x, y) {
+                var splosion = new Explosion();
+                splosion.x = x;
+                splosion.y = y;
+                splosion.visible = true;
+                Game.sprites.push(splosion);
+            },
+
+            FSM: {
+                boot: function () {
+                    Game.spawnAsteroids(5);
+                    this.state = 'waiting';
+                },
+                waiting: function () {
+                    Text.renderText('Waiting for players', Game.canvasWidth / 30, Game.canvasWidth/2 - (Game.canvasWidth / 30 * 7), Game.canvasHeight/2);
+                },
+                
+                countdown: function(dt) {
+                    this.dtInState += dt/33.33;
+                    var fontSize = Game.canvasWidth / 30;
+
+                    if(this.dtInState < 1) {
+                        Text.renderText('Game is about to begin', fontSize, Game.canvasWidth/2 - fontSize * 7, Game.canvasHeight/2);  
+                    }
+                    else if(this.dtInState < 2) {
+                        size = fontSize * 2 * (0.2 + this.dtInState - 1);
+                        Text.renderText('1', size, Game.canvasWidth/2 - size/2, Game.canvasHeight/2);     
+                    }
+                    else if(this.dtInState < 3) {
+                        size = fontSize * 2 * (0.2 + this.dtInState - 2);
+                        Text.renderText('2', size, Game.canvasWidth/2 - size/2, Game.canvasHeight/2);     
+                    }
+                    else if(this.dtInState < 4) {
+                        size = fontSize * 2 * (0.2 + this.dtInState - 3);
+                        Text.renderText('3', size, Game.canvasWidth/2 - size/2, Game.canvasHeight/2);     
+                    }
+                    else {
+                        this.dtInState = 0;
+                        this.state = 'start';
+                    }
+                },
+
+                start: function () {
+                    for (var i = 0; i < Game.sprites.length; i++) {
+                        if (Game.sprites[i].name == 'asteroid') {
+                            Game.sprites[i].die();
+                        } else if (Game.sprites[i].name == 'bullet' ||
+                                             Game.sprites[i].name == 'bigalien') {
+                            Game.sprites[i].visible = false;
+                        }
+                    }
+
+                    Game.score = 0;
+                    Game.lives = 2;
+                    Game.totalAsteroids = 2;
+                    Game.spawnAsteroids();
+
+                    Game.nextBigAlienTime = Date.now() + 30000 + (30000 * randomService.random(randomIndex++));
+
+                    this.state = 'spawn_ship';
+                },
+                spawn_ship: function () {
+                    Game.ship.x = Game.canvasWidth / 2;
+                    Game.ship.y = Game.canvasHeight / 2;
+                    if (Game.ship.isClear()) {
+                        Game.ship.rot = 0;
+                        Game.ship.vel.x = 0;
+                        Game.ship.vel.y = 0;
+                        Game.ship.visible = true;
+                        this.state = 'run';
+                    }
+                },
+                run: function () {
+                    for (var i = 0; i < Game.sprites.length; i++) {
+                        if (Game.sprites[i].name == 'asteroid') {
+                            break;
+                        }
+                    }
+                    if (i == Game.sprites.length) {
+                        this.state = 'new_level';
+                    }
+                    if (!Game.bigAlien.visible &&
+                            Date.now() > Game.nextBigAlienTime) {
+                        Game.bigAlien.visible = true;
+                        Game.nextBigAlienTime = Date.now() + (30000 * randomService.random(randomIndex++));
+                    }
+                },
+                new_level: function () {
+                    if (this.timer == null) {
+                        this.timer = Date.now();
+                    }
+                    // wait a second before spawning more asteroids
+                    if (Date.now() - this.timer > 1000) {
+                        this.timer = null;
+                        Game.totalAsteroids++;
+                        if (Game.totalAsteroids > 12) Game.totalAsteroids = 12;
+                        Game.spawnAsteroids();
+                        this.state = 'run';
+                    }
+                },
+                player_died: function () {
+                    if (Game.lives < 0) {
+                        this.state = 'end_game';
+                    } else {
+                        if (this.timer == null) {
+                            this.timer = Date.now();
+                        }
+                        // wait a second before spawning
+                        if (Date.now() - this.timer > 1000) {
+                            this.timer = null;
+                            this.state = 'spawn_ship';
+                        }
+                    }
+                },
+                end_game: function () {
+                    Text.renderText('GAME OVER', Game.canvasWidth/30, Game.canvasWidth/2 - (Game.canvasWidth/30 * 5), Game.canvasHeight/2 + 10);
+                    if (this.timer == null) {
+                        this.timer = Date.now();
+                    }
+                    // wait 5 seconds then go back to waiting state
+                    if (Date.now() - this.timer > 5000) {
+                        this.timer = null;
+                        this.state = 'waiting';
+                    }
+
+                    window.gameStart = false;
+                },
+
+                execute: function (dt) {
+                    this[this.state](dt);
+                },
+                state: 'boot',
+                dtInState: 0
+            }
+
+        };
+
+        var sprites = [];
+        Game.sprites = sprites;
 
         var ship = new Ship();
 
