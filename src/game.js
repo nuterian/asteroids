@@ -1015,7 +1015,8 @@ Game = {
 /*            if (randomService.random(randomIndex++) > 0.5) {
                 roid.points.reverse();
             }*/
-            var x0 = 0, y0 = 0.0, r = getRandomInt(15, 20), points = [];
+            var minRad = Math.min(this.canvasWidth, this.canvasHeight) / 50;
+            var x0 = 0, y0 = 0.0, r = getRandomInt(minRad, minRad+5), points = [];
             for (var j = 0; j < 2 * Math.PI;) {
                 var x = x0 + (r * Math.cos(j));
                 var y = y0 + (r * Math.sin(j));
@@ -1044,26 +1045,26 @@ Game = {
             this.state = 'waiting';
         },
         waiting: function () {
-            Text.renderText('Waiting for players', 36, Game.canvasWidth/2 - 270, Game.canvasHeight/2);
+            Text.renderText('Waiting for players', Game.canvasWidth / 30, Game.canvasWidth/2 - (Game.canvasWidth / 30 * 7), Game.canvasHeight/2);
         },
         
         countdown: function(dt) {
             this.dtInState += dt/33.33;
-            var size;
+            var fontSize = Game.canvasWidth / 30;
 
             if(this.dtInState < 1) {
-                Text.renderText('Game is about to begin', 36, Game.canvasWidth/2 - 270, Game.canvasHeight/2);  
+                Text.renderText('Game is about to begin', fontSize, Game.canvasWidth/2 - fontSize * 7, Game.canvasHeight/2);  
             }
             else if(this.dtInState < 2) {
-                size = 70 * (0.2 + this.dtInState - 1);
+                size = fontSize * 2 * (0.2 + this.dtInState - 1);
                 Text.renderText('1', size, Game.canvasWidth/2 - size/2, Game.canvasHeight/2);     
             }
             else if(this.dtInState < 3) {
-                size = 70 * (0.2 + this.dtInState - 2);
+                size = fontSize * 2 * (0.2 + this.dtInState - 2);
                 Text.renderText('2', size, Game.canvasWidth/2 - size/2, Game.canvasHeight/2);     
             }
             else if(this.dtInState < 4) {
-                size = 70 * (0.2 + this.dtInState - 3);
+                size = fontSize * 2 * (0.2 + this.dtInState - 3);
                 Text.renderText('3', size, Game.canvasWidth/2 - size/2, Game.canvasHeight/2);     
             }
             else {
@@ -1145,7 +1146,7 @@ Game = {
             }
         },
         end_game: function () {
-            Text.renderText('GAME OVER', 50, Game.canvasWidth/2 - 160, Game.canvasHeight/2 + 10);
+            Text.renderText('GAME OVER', Game.canvasWidth/30, Game.canvasWidth/2 - (Game.canvasWidth/30 * 5), Game.canvasHeight/2 + 10);
             if (this.timer == null) {
                 this.timer = Date.now();
             }
@@ -1207,7 +1208,7 @@ angular.module('myApp', [])
     window.onload = function(){
         var gameArea = document.getElementById("gameArea");
         var canvas = document.getElementById("gameCanvas");
-        
+
         window.setRealTimeSimpleService(realTimeSimpleService, randomService);
 
         canvas.width = Game.canvasWidth = gameArea.clientWidth;
@@ -1350,7 +1351,7 @@ angular.module('myApp', [])
 
             // score
             var score_text = ''+Game.score;
-            Text.renderText(score_text, 18, Game.canvasWidth - 14 * score_text.length, 20);
+            Text.renderText(score_text, Game.canvasWidth/60, Game.canvasWidth - 14 * score_text.length, 20);
 
             // extra dudes
             for (i = 0; i < Game.lives; i++) {
@@ -1363,7 +1364,7 @@ angular.module('myApp', [])
             }
 
             if (showFramerate) {
-                Text.renderText(''+avgFramerate, 24, Game.canvasWidth - 38, Game.canvasHeight - 2);
+                Text.renderText(''+avgFramerate, Game.canvasWidth/60, Game.canvasWidth - 38, Game.canvasHeight - 2);
             }
 
             frameCount++;
