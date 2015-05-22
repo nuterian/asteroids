@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!-- build:[manifest] game.appcache -->
-<html lang="en">
+<html lang="en" ng-app="myApp" ng-strict-di>
 <!-- /build -->
 <head>
   <meta charset="utf-8">
@@ -29,7 +29,7 @@
   <link rel="stylesheet" type="text/css" href="styles/game.css">
 
 </head>
-<body ng-cloak ng-app="myApp">
+<body>
   <div id="gameArea">
     <canvas id="gameCanvas"></canvas>
   </div>

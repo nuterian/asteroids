@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" manifest="game.appcache">
+<html lang="en" ng-app="myApp" ng-strict-di manifest="game.appcache">
 <head>
   <meta charset="utf-8">
   <title>asteroids</title>
@@ -20,7 +20,7 @@
   <link rel="stylesheet" type="text/css" href="styles/game.css">
 
 </head>
-<body ng-cloak ng-app="myApp">
+<body>
   <div id="gameArea">
     <canvas id="gameCanvas"></canvas>
   </div>

@@ -1399,8 +1399,8 @@ function setRealTimeSimpleService(realTimeSimpleService, randomService) {
 }
 
 angular.module('myApp', [])
-    .run(function (realTimeSimpleService, resizeGameAreaService, randomService) {
+    .run(['realTimeSimpleService', 'resizeGameAreaService', 'randomService', function (realTimeSimpleService, resizeGameAreaService, randomService) {
     resizeGameAreaService.setWidthToHeight(1.77);
     
     window.setRealTimeSimpleService(realTimeSimpleService, randomService);
-});
+}]);
